@@ -114,7 +114,8 @@ module CachedResource
 
       # Generate the request cache key.
       def cache_key(*arguments)
-        "#{name.parameterize.gsub("-", "/")}/#{arguments.join('/')}".downcase.delete(' ')
+        key = "#{name.parameterize.gsub("-", "/")}/#{arguments.join('/')}".downcase.delete(' ')
+        Digest::MD5.hexdigest(key)
       end
 
       # Make a full duplicate of an ActiveResource record.
