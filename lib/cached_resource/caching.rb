@@ -114,6 +114,7 @@ module CachedResource
 
       # Generate the request cache key.
       def cache_key(*arguments)
+          # key_from_url(url_from_parameters(arguments.first))
         key = "#{name.parameterize.gsub("-", "/")}/#{arguments.join('/')}".downcase.delete(' ')
         Digest::MD5.hexdigest(key)
       end
@@ -142,6 +143,50 @@ module CachedResource
           { :object => object, :persistence => object.persisted? }.to_json
         end
       end
+      private
+
+      Url = Struct.new(:url) do
+        def parts
+          url
+            .split('?')
+            .map{ |part| part.gsub(/\.json/, '') }
+        end
+
+        def path
+          parts[0]
+        end
+
+        def query
+          parts[1]
+        end
+
+        def size
+          parts.size
+        end
+      end
+
+      def key_from_url(url)
+        if url.query
+          url.path + '#' + Digest::MD5.hexdigest(url.query)
+        else
+          url.path
+        end
+      end
+
+      def url_from_parameters(parameters)
+        if includes_from_parameter?(parameters)
+          Url.new(parameters.second[:from])
+        else
+          Url.new(element_path(*parameters))
+        end
+      end
+
+      def includes_from_parameter?(parameters)
+        parameters.second &&
+        parameters.second.is_a?(Hash) &&
+        parameters.second.include?(:from)
+      end
+
     end
   end
 end
