@@ -156,6 +156,10 @@ module CachedResource
           parts[0]
         end
 
+        def truncated_path
+          path.truncate(150)
+        end
+
         def query
           parts[1]
         end
@@ -167,15 +171,18 @@ module CachedResource
 
       def key_from_url(url)
         if url.query
-          url.path + '#' + Digest::MD5.hexdigest(url.query)
+          url.truncated_path + '#' + Digest::MD5.hexdigest(url.query)
         else
-          url.path
+          url.truncated_path
         end
       end
 
       def url_from_parameters(parameters)
-        if includes_from_parameter?(parameters)
+        case
+        when includes_from_parameter?(parameters)
           Url.new(parameters.second[:from])
+        when includes_params_parameter?(parameters)
+          Url.new(element_path(parameters.first, parameters.second[:params]))
         else
           Url.new(element_path(*parameters))
         end
@@ -185,6 +192,12 @@ module CachedResource
         parameters.second &&
         parameters.second.is_a?(Hash) &&
         parameters.second.include?(:from)
+      end
+
+      def includes_params_parameter?(parameters)
+        parameters.second &&
+        parameters.second.is_a?(Hash) &&
+        parameters.second.include?(:params)
       end
 
     end
