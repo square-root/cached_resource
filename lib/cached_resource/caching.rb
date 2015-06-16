@@ -179,6 +179,8 @@ module CachedResource
 
       def url_from_parameters(parameters)
         case
+        when includes_both_parameters?(parameters)
+          Url.new("#{parameters.second[:from]}?#{parameters.second[:params].to_query}")
         when includes_from_parameter?(parameters)
           Url.new(parameters.second[:from])
         when includes_params_parameter?(parameters)
@@ -198,6 +200,11 @@ module CachedResource
         parameters.second &&
         parameters.second.is_a?(Hash) &&
         parameters.second.include?(:params)
+      end
+
+      def includes_both_parameters?(parameters)
+        includes_from_parameter?(parameters) &&
+        includes_params_parameter?(parameters)
       end
 
     end
